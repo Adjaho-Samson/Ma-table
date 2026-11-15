@@ -4,12 +4,19 @@ on:
   push:
     branches:
       - arena/756ad948-ma-table
+    paths:
+      - '.github/workflows/probe-site.yml'
+
+permissions:
+  contents: write
 
 jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: arena/756ad948-ma-table
       - name: Probe site
         run: |
           set -x
@@ -29,14 +36,21 @@ jobs:
             name=$(echo "$a" | tr '/:?&=' '_' | tr -c 'A-Za-z0-9._-' '_')
             curl -sL "$url" -o "probe/js/$name"
           done < probe/assets.txt
-          # probe candidate api endpoints
-          for p in /api/tables /api/rencontrages /api/table /api/book /api/bookings /api/reservations /api/reserve /api/inscriptions /api/inscrits /api/meetups /api/tables.json /api/data /data/tables.json /api/config /api/list /api/table/219b6ebf-7155-41f6-a6c7-96aaca2f93e3; do
+          for p in /api/tables /api/rencontrages /api/table /api/book /api/bookings /api/reservations /api/reserve /api/inscriptions /api/meetups /api/tables.json /api/data /api/list /api/table/219b6ebf-7155-41f6-a6c7-96aaca2f93e3; do
             code=$(curl -s -o "probe/resp_$(echo $p | tr '/.' '__').txt" -w '%{http_code} %{content_type}' "$BASE$p")
             echo "$p -> $code"
           done
+          # grep interesting strings from bundles
+          grep -rhoE 'https?://[a-zA-Z0-9._/@?=&%:-]+' probe/js | sort -u > probe/urls.txt
+          grep -rhoE '"/api/[a-zA-Z0-9._/-]*"' probe/js | sort -u > probe/apipaths.txt
+          grep -rhoE "'\/api\/[a-zA-Z0-9._/-]*'" probe/js | sort -u >> probe/apipaths.txt
+          grep -rhoE 'supabase[a-zA-Z0-9._-]*' probe/js | sort -u > probe/supabase.txt
+          grep -rhoE 'eyJ[A-Za-z0-9._-]{40,}' probe/js | sort -u > probe/keys.txt
           ls -la probe probe/js
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: probe
-          path: probe/
+      - name: Commit
+        run: |
+          git config user.name probe
+          git config user.email probe@example.com
+          git add -f probe
+          git commit -m "chore: probe legacy site output" || echo "nothing to commit"
+          git push origin HEAD:arena/756ad948-ma-table
