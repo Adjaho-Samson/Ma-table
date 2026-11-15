@@ -1,0 +1,9 @@
+/_next/static/chunks/117-baa5a9aad674a04c.js
+/_next/static/chunks/972-2232a5eed6a51325.js
+/_next/static/chunks/app/layout-7696cd5165525d0b.js
+/_next/static/chunks/app/page-d8f8ea03207bfdfa.js
+/_next/static/chunks/fd9d1056-49ca28257eb7a92c.js
+/_next/static/chunks/main-app-2dcde4753ea0d175.js
+/_next/static/chunks/polyfills-42372ed130431b0a.js
+/_next/static/chunks/webpack-ca7c532c9df5d7c5.js
+/_next/static/css/4054e8275e811e8a.css
