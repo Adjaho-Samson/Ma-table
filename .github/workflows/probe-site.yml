@@ -53,4 +53,4 @@ jobs:
           git config user.email probe@example.com
           git add -f probe
           git commit -m "chore: probe legacy site output" || echo "nothing to commit"
-          git push origin HEAD:arena/756ad948-ma-table
+          git push origin HEAD:probe-output
