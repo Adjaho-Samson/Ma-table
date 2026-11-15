@@ -1,0 +1,42 @@
+name: probe-site
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - arena/756ad948-ma-table
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe site
+        run: |
+          set -x
+          mkdir -p probe/js
+          BASE=https://ma-table-nine.vercel.app
+          curl -sL "$BASE/" -o probe/home.html
+          curl -sL "$BASE/table/219b6ebf-7155-41f6-a6c7-96aaca2f93e3" -o probe/table.html
+          curl -sL "$BASE/icons/logo.svg" -o probe/logo.svg
+          grep -oE '(src|href)="[^"]+\.(js|mjs|css)"' probe/home.html | sed 's/.*="//;s/"$//' | sort -u > probe/assets.txt
+          cat probe/assets.txt
+          while read -r a; do
+            case "$a" in
+              http*) url="$a" ;;
+              /*) url="$BASE$a" ;;
+              *) url="$BASE/$a" ;;
+            esac
+            name=$(echo "$a" | tr '/:?&=' '_' | tr -c 'A-Za-z0-9._-' '_')
+            curl -sL "$url" -o "probe/js/$name"
+          done < probe/assets.txt
+          # probe candidate api endpoints
+          for p in /api/tables /api/rencontrages /api/table /api/book /api/bookings /api/reservations /api/reserve /api/inscriptions /api/inscrits /api/meetups /api/tables.json /api/data /data/tables.json /api/config /api/list /api/table/219b6ebf-7155-41f6-a6c7-96aaca2f93e3; do
+            code=$(curl -s -o "probe/resp_$(echo $p | tr '/.' '__').txt" -w '%{http_code} %{content_type}' "$BASE$p")
+            echo "$p -> $code"
+          done
+          ls -la probe probe/js
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: probe
+          path: probe/
