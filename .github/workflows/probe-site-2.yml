@@ -1,6 +1,11 @@
 name: probe-site-2
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - arena/756ad948-ma-table
+    paths:
+      - '.github/workflows/probe-site-2.yml'
 
 permissions:
   contents: write
